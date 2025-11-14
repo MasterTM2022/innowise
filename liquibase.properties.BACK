@@ -1,0 +1,6 @@
+changeLogFile=src/main/resources/db/changelog/db.changelog-master.yaml
+url=jdbc:postgresql://localhost:5432/InnoBase
+username="postgres"
+password="070696"
+driver=org.postgresql.Driver
+referenceUrl=jdbc:postgresql://localhost:5432/InnoBase

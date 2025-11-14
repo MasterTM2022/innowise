@@ -1,0 +1,26 @@
+spring:
+  liquibase:
+    enabled: true
+    change-log: classpath:/db/changelog/db.changelog-master.yaml
+  cache:
+    type: none
+
+  jpa:
+    hibernate:
+      ddl-auto: none
+    show-sql: false
+
+  logging:
+    level:
+      liquibase: DEBUG
+      org.springframework.beans: DEBUG
+      org.springframework.context.annotation: TRACE
+
+    #  datasource:
+    #    url: jdbc:postgresql://postgres:5432/InnoBase
+    #    username: postgres
+    #    password: 070696
+    #    driver-class-name: org.postgresql.Driver
+
+redis:
+  enabled: false

@@ -1,0 +1,21 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+  liquibase:
+    enabled: true
+    change-log: classpath:/db/changelog/db.changelog-master.yaml
+  cache:
+    type: redis
+
+logging:
+  level:
+    org.springframework.beans: DEBUG
+    org.springframework.context.annotation: TRACE
+
+server:
+  port: 8080
