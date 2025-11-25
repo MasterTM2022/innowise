@@ -7,6 +7,7 @@ import com.innowise.UserService.repository.CardRepository;
 import com.innowise.UserService.repository.UserRepository;
 import com.innowise.UserService.service.exception.*;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
@@ -19,16 +20,12 @@ import java.util.Optional;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class UserService {
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private CardRepository cardRepository;
-
-    @Autowired
-    private UserMapper userMapper;
+    private final UserRepository userRepository;
+    private final CardRepository cardRepository;
+    private final UserMapper userMapper;
 
     // Create
     @Transactional

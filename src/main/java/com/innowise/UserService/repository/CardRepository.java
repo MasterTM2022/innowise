@@ -1,6 +1,7 @@
 package com.innowise.UserService.repository;
 
 import com.innowise.UserService.entity.Card;
+import org.springframework.boot.web.server.ErrorPageRegistrarBeanPostProcessor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -16,7 +17,7 @@ import java.util.Optional;
 public interface CardRepository extends JpaRepository<Card, Long> {
 
     // Named Methods
-    List<Card> findByUserId(Long userId);
+    Page<Card> findByUserId(Long userId, Pageable pageable);
     Optional<Card> findById(Long id);
     void deleteById(Long id);
 
@@ -25,10 +26,10 @@ public interface CardRepository extends JpaRepository<Card, Long> {
 
     // JPQL
     @Query("SELECT c FROM Card c WHERE c.expirationDate < :date")
-    List<Card> findExpiredCards(@Param("date") LocalDate date);
+    Page<Card> findExpiredCards(@Param("date") LocalDate date, Pageable pageable);
 
     // Native SQL
-    @Query(value = "SELECT * FROM card_info WHERE number LIKE CONCAT('%', :last4, '%')",
+    @Query(value = "SELECT * FROM card_info WHERE number LIKE CONCAT('%', :fourDigits, '%')",
             nativeQuery = true)
-    List<Card> findByLast4Digits(@Param("last4") String last4);
+    Page<Card> findByLast4Digits(@Param("fourDigits") String fourDigits, Pageable pageable);
 }

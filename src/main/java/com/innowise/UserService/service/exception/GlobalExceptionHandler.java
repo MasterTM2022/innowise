@@ -5,16 +5,21 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.bind.MethodArgumentNotValidException;
-
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 import java.time.LocalDateTime;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    public GlobalExceptionHandler() {
+        System.out.println("✅ GlobalExceptionHandler: ЭКЗЕМПЛЯР СОЗДАН!");
+    }
+
     // 1. Обработка не найденного пользователя
     @ExceptionHandler(UserNotFoundException.class)
     public ResponseEntity<ErrorResponse> handleUserNotFound(UserNotFoundException ex) {
+        System.out.println("🎯 GlobalExceptionHandler: handling UserNotFoundException: " + ex.getMessage());
         ErrorResponse error = new ErrorResponse(
                 "USER_NOT_FOUND",
                 ex.getMessage(),
@@ -63,7 +68,43 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
-    // 5. Любая другая ошибка (на случай непредвиденного)
+    // 5. Ошибка в адресе
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<ErrorResponse> handleResourceNotFound(NoResourceFoundException ex) {
+        ErrorResponse error = new ErrorResponse(
+                "NOT_FOUND",
+                "The requested resource was not found: " + ex.getResourcePath(),
+                HttpStatus.NOT_FOUND.value(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    // 6. Карта с таким номером существует
+    @ExceptionHandler(CardNumberAlreadyExistsException.class)
+    public ResponseEntity<ErrorResponse> handleCardNumberAlreadyExists(CardNumberAlreadyExistsException ex) {
+        ErrorResponse error = new ErrorResponse(
+                "CARD_NUMBER_EXISTS",
+                ex.getMessage(),
+                HttpStatus.CONFLICT.value(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
+    }
+
+    // 7. Запрос имеет неверные аргументы
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgument(IllegalArgumentException ex) {
+        ErrorResponse error = new ErrorResponse(
+                "INVALID_INPUT",
+                ex.getMessage(),
+                HttpStatus.BAD_REQUEST.value(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    // 100. Любая другая ошибка (на случай непредвиденного)
     @ExceptionHandler(java.lang.Exception.class)
     public ResponseEntity<ErrorResponse> handleGeneric(java.lang.Exception ex) {
         ErrorResponse error = new ErrorResponse(

@@ -32,3 +32,6 @@ logging:
   level:
     org.springframework.beans: DEBUG
     org.springframework.context.annotation: TRACE
+    org.springframework.data.redis: DEBUG
+    io.lettuce.core: DEBUG
+    org.springframework.cache: DEBUG

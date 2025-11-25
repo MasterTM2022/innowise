@@ -1,37 +1,29 @@
 package com.innowise.UserService.controllers;
 
+import lombok.RequiredArgsConstructor;
 import com.innowise.UserService.dto.UserDto;
 import com.innowise.UserService.entity.User;
 import com.innowise.UserService.mapper.UserMapper;
 import com.innowise.UserService.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping("/api/v1/users")
+@RequiredArgsConstructor
 public class UserController {
 
-    @Autowired
-    private UserService userService;
-
-    @Autowired
-    private UserMapper userMapper;
+    private final UserService userService;
+    private final UserMapper userMapper;
 
     @PostMapping
     public ResponseEntity<?> createUser(@Valid @RequestBody UserDto userDto) {
-            User user = userMapper.toEntity(userDto);
-            UserDto createdUserDto = userService.createUser(user);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdUserDto);
-    }
-
-    @GetMapping("/{id}")
-    public ResponseEntity<UserDto> getUser(@PathVariable Long id) {
-        UserDto userDto = userService.getUserById(id);
-        return ResponseEntity.status(HttpStatus.OK).body(userDto);
+        User user = userMapper.toEntity(userDto);
+        UserDto createdUserDto = userService.createUser(user);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdUserDto);
     }
 
     @GetMapping
@@ -41,21 +33,32 @@ public class UserController {
         return ResponseEntity.ok(userService.getAllUsers(page, size));
     }
 
-    @GetMapping("/email/{email}")
-    public ResponseEntity<UserDto> getUserByEmail(@PathVariable String email) {
-        UserDto userDto = userService.getUserByEmail(email);
-        return ResponseEntity.status(HttpStatus.OK).body(userDto);
+    @GetMapping("/search")
+    public ResponseEntity<?> searchUser(
+            @RequestParam(required = false) Long id,
+            @RequestParam(required = false) String email) {
+
+        if (id != null) {
+            return ResponseEntity.status(HttpStatus.OK).body(userService.getUserById(id));
+        }
+
+        if (email != null) {
+            return ResponseEntity.status(HttpStatus.OK).body(userService.getUserByEmail(email));
+        }
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body("Required parameter: 'id' or 'email'");
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/update/{id}")
     public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody UserDto userDto) {
-            UserDto updatedUser = userService.updateUser(id, userDto);
-            return ResponseEntity.status(HttpStatus.OK).body(updatedUser);
+        UserDto updatedUser = userService.updateUser(id, userDto);
+        return ResponseEntity.status(HttpStatus.OK).body(updatedUser);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/deleteUser/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-            userService.deleteUser(id);
-            return ResponseEntity.noContent().build();
+        userService.deleteUser(id);
+        return ResponseEntity.noContent().build();
     }
 }

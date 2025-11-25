@@ -7,9 +7,11 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
+import org.springframework.data.web.config.EnableSpringDataWebSupport;
 
 @SpringBootApplication
 @EnableJpaRepositories(basePackages = "com.innowise.UserService.repository")
+@EnableSpringDataWebSupport(pageSerializationMode = EnableSpringDataWebSupport.PageSerializationMode.VIA_DTO)
 @EntityScan(basePackages = "com.innowise.UserService.entity")
 @EnableCaching
 public class UserServiceApplication {

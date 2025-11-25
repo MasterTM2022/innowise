@@ -67,7 +67,7 @@ public class CardServiceTest {
         card.setExpirationDate(expirationDate);
         card.setUser(user);
 
-        CardDto cardDto = new CardDto(idCard, user, number, holder, expirationDate);
+        CardDto cardDto = new CardDto(idCard, id, number, holder, expirationDate);
 
         when(cardRepository.findById(id)).thenReturn(Optional.of(card));
         when(cardMapper.toDto(card)).thenReturn(cardDto);
@@ -127,7 +127,7 @@ public class CardServiceTest {
         savedUser.addCard(savedCard); // ← добавляем карту в сохранённого юзера
 
         when(userRepository.save(any(User.class))).thenReturn(savedUser);
-        when(cardMapper.toDto(savedCard)).thenReturn(new CardDto(1L, savedUser, "1234567890123456", "IVAN IVANOV", LocalDate.of(2029, 12, 31)));
+        when(cardMapper.toDto(savedCard)).thenReturn(new CardDto(1L, savedUser.getId(), "1234567890123456", "IVAN IVANOV", LocalDate.of(2029, 12, 31)));
 
         // When
         CardDto result = cardService.createCard(userId, card);
@@ -206,8 +206,8 @@ public class CardServiceTest {
         List<Card> cardList = Arrays.asList(card1, card2);
         Page<Card> cardPage = new PageImpl<>(cardList);
 
-        CardDto cardDto1 = new CardDto(null, user, "1234", "IVAN IVANOV", LocalDate.of(2029, 11, 30));
-        CardDto cardDto2 = new CardDto(null, user, "5678", "PETR PETROV", LocalDate.of(2030, 12, 31));
+        CardDto cardDto1 = new CardDto(null, user.getId(), "1234", "IVAN IVANOV", LocalDate.of(2029, 11, 30));
+        CardDto cardDto2 = new CardDto(null, user.getId(), "5678", "PETR PETROV", LocalDate.of(2030, 12, 31));
 
         List<CardDto> cardDtoList = Arrays.asList(cardDto1, cardDto2);
         Page<CardDto> expectedPage = new PageImpl<>(cardDtoList);

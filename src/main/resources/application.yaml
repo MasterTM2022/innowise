@@ -11,6 +11,9 @@ spring:
     change-log: classpath:/db/changelog/db.changelog-master.yaml
   cache:
     type: redis
+  web:
+    resources:
+      add-mappings: true
 
 logging:
   level:
