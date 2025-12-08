@@ -1,9 +1,10 @@
 package com.innowise.UserService.service;
 
 import com.innowise.UserService.dto.UserDto;
+import com.innowise.UserService.entity.AppUser;
 import com.innowise.UserService.entity.User;
 import com.innowise.UserService.mapper.UserMapper;
-import com.innowise.UserService.repository.CardRepository;
+import com.innowise.UserService.repository.AppUserRepository;
 import com.innowise.UserService.repository.UserRepository;
 import com.innowise.UserService.service.exception.*;
 import jakarta.transaction.Transactional;
@@ -14,7 +15,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Optional;
 
@@ -24,7 +24,7 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository userRepository;
-    private final CardRepository cardRepository;
+    private final AppUserRepository appUserRepository;
     private final UserMapper userMapper;
 
     // Create
@@ -82,6 +82,18 @@ public class UserService {
         User updatedUser = userRepository.save(user);
 
         return userMapper.toDto(updatedUser);
+    }
+
+    // Link AppUser and User
+    public void linkAppUserToExistingUser(Long appUserId, Long userId) {
+        AppUser appUser = appUserRepository.findById(appUserId)
+                .orElseThrow(() -> new AppUserNotFoundException("AppUser not found"));
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        appUser.setUser(user);
+        appUserRepository.save(appUser);
     }
 
     // Delete

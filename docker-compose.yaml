@@ -11,6 +11,9 @@ services:
       SPRING_DATA_REDIS_HOST: ${SPRING_DATA_REDIS_HOST}
       SPRING_DATA_REDIS_PORT: ${SPRING_DATA_REDIS_PORT}
       SPRING_LIQUIBASE_ENABLED: ${SPRING_LIQUIBASE_ENABLED}
+      JWT_SECRET: ${JWT_SECRET}
+      JWT_ACCESS_EXPIRATION: ${JWT_ACCESS_EXPIRATION}
+      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION}
     depends_on:
       postgres:
         condition: service_healthy
@@ -27,14 +30,15 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     volumes:
        - postgres_data:/var/lib/postgresql/data
-       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+#       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
       - "${POSTGRES_PORT}:${POSTGRES_PORT}"
     healthcheck:
       test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER}" ]
-      interval: 5s
-      timeout: 5s
+      interval: 10s
+      timeout: 10s
       retries: 5
+      start_period: 30s
     networks:
       - backend
 

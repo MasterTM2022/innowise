@@ -27,8 +27,21 @@ spring:
 server:
   port: 8080
 
+app:
+  jwt:
+    secret: ${JWT_SECRET:e38e01a12177a40fc49f833864b5423b29a039b127c284f10ac81c07933d4234c2749c01633de0efa45c14fb40cfc60a90b3b8b98108cd38dd3d10d4f666e314}
+    access-expiration: 900000 # 15min
+    refresh-expiration: 86400000 # 24hours
+
 logging:
   level:
+    org.springframework.core.env: DEBUG
+    org.springframework.dao: DEBUG
     org.springframework.data.redis: DEBUG
+    org.springframework.orm.jpa: DEBUG
+    org.springframework.security: DEBUG
+    org.springframework.transaction: DEBUG
     org.springframework.web: DEBUG
     org.hibernate.SQL: DEBUG
+    com.innowise: DEBUG
+
