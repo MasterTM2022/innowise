@@ -27,6 +27,12 @@ public class CardService {
     private final UserRepository userRepository;
     private final CardMapper cardMapper;
 
+    public boolean isOwner(Long cardId, Long userId) {
+        return cardRepository.findById(cardId)
+                .map(card -> card.getUser().getId().equals(userId))
+                .orElse(false);
+    }
+
     // Create
     @Transactional
     public CardDto createCard(Long userId, Card card) {
@@ -80,6 +86,17 @@ public class CardService {
         }
         Pageable pageable = PageRequest.of(page, size);
         Page<Card> cardsPage = cardRepository.findExpiredCards(expirationDate, pageable);
+        return cardsPage.map(cardMapper::toDto);
+    }
+
+    // Get all user expired cards
+    @Transactional
+    public Page<CardDto> getUserExpiredCards(Long userId, LocalDate expirationDate, int page, int size) {
+        if (expirationDate == null) {
+            expirationDate = LocalDate.now();
+        }
+        Pageable pageable = PageRequest.of(page, size);
+        Page<Card> cardsPage = cardRepository.findExpiredCardsByUserId(userId, expirationDate, pageable);
         return cardsPage.map(cardMapper::toDto);
     }
 

@@ -4,5 +4,5 @@ target
 .idea
 *.iml
 Dockerfile
-docker-compose.yml
+src/main/resources/docker-compose.yaml
 README.md
