@@ -48,4 +48,11 @@ public class SecurityUtils {
 
         return user.getId();
     }
+
+    public boolean isAdmin() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null) return false;
+        return auth.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals(AppUser.Role.ADMIN.name()));
+    }
 }

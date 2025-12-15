@@ -1,11 +1,13 @@
 package com.innowise.UserService.controllers;
 
 import com.innowise.UserService.dto.CardDto;
+import com.innowise.UserService.dto.CreateCardRequest;
 import com.innowise.UserService.entity.AppUser;
 import com.innowise.UserService.entity.User;
 import com.innowise.UserService.mapper.CardMapper;
 import com.innowise.UserService.security.service.AppUserDetails;
 import com.innowise.UserService.security.utils.SecurityUtils;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import com.innowise.UserService.entity.Card;
 import com.innowise.UserService.service.CardService;
@@ -21,7 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 
 @RestController
-@RequestMapping("/api/v1/users/")
+@RequestMapping("/api/v1/cards")
 @RequiredArgsConstructor
 @Validated
 public class CardController {
@@ -31,30 +33,28 @@ public class CardController {
     private final SecurityUtils securityUtils;
 
 
-    @PostMapping("/{userId}/cards")
-    @PreAuthorize("#userId == authentication.principal.appUser.id or hasRole('ADMIN')")
-    public ResponseEntity<CardDto> createCard(@PathVariable Long userId, @RequestBody CardDto cardDto) {
-        Card card = cardMapper.toEntity(cardDto);
-        CardDto createdCardDto = cardService.createCard(userId, card);
-        return ResponseEntity.status(HttpStatus.OK).body(createdCardDto);
+    @PostMapping
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<CardDto> createCard(@Valid @RequestBody CreateCardRequest request) {
+        Long currentUserId = securityUtils.getCurrentUserId();
+        CardDto createdCard = cardService.createCard(currentUserId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdCard);
     }
 
-    @GetMapping("/cards")
+    @GetMapping("/{id}")
     @PreAuthorize("@cardSecurityService.canViewCard(authentication, #id)")
-    public ResponseEntity<CardDto> getCard(@RequestParam Long id) {
+    public ResponseEntity<CardDto> getCard(@PathVariable Long id) {
         CardDto cardDto = cardService.getCardById(id);
         return ResponseEntity.status(HttpStatus.OK).body(cardDto);
     }
 
-    @GetMapping("/cards")
+    @GetMapping
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Page<CardDto>> getCards(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        boolean isAdmin = auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals(AppUser.Role.ADMIN.name()));
+        boolean isAdmin = securityUtils.isAdmin();
 
         Page<CardDto> cards;
         if (isAdmin) {
@@ -67,16 +67,14 @@ public class CardController {
         return ResponseEntity.ok(cards);
     }
 
-    @GetMapping("/cards/expired/")
+    @GetMapping("/expired")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Page<CardDto>> getExpiredCards(
             @RequestParam(required = false) LocalDate date,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        boolean isAdmin = auth.getAuthorities().stream()
-                .anyMatch(a -> a.getAuthority().equals(AppUser.Role.ADMIN.name()));
+        boolean isAdmin = securityUtils.isAdmin();
 
         LocalDate expDate = date != null ? date : LocalDate.now();
 
@@ -91,14 +89,14 @@ public class CardController {
         return ResponseEntity.ok(cards);
     }
 
-    @GetMapping("/cards/search")
-    @PreAuthorize("hasRole('ADMIN')")
+    @GetMapping("/search")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Page<CardDto>> getCardsByLast4Digits(
             @RequestParam String searchFourDigits,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        if (searchFourDigits == null || !searchFourDigits.matches("\\d{4}")) {
+        if (!searchFourDigits.matches("\\d{4}")) {
             throw new IllegalArgumentException("Parameter 'searchFourDigits' must be exactly 4 digits (e.g. '1234')");
         }
 
@@ -106,7 +104,7 @@ public class CardController {
         return ResponseEntity.ok(cards);
     }
 
-    @DeleteMapping("/card/{id}")
+    @DeleteMapping("/{id}")
     @PreAuthorize("@cardSecurityService.canDeleteCard(authentication, #id)")
     public ResponseEntity<Void> deleteCard(@PathVariable Long id) {
         cardService.deleteCard(id);

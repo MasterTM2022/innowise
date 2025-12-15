@@ -1,6 +1,7 @@
 package com.innowise.UserService.service;
 
 import com.innowise.UserService.dto.CardDto;
+import com.innowise.UserService.dto.CreateCardRequest;
 import com.innowise.UserService.entity.Card;
 import com.innowise.UserService.entity.User;
 import com.innowise.UserService.mapper.CardMapper;
@@ -105,12 +106,11 @@ public class CardServiceTest {
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(user));
 
-        Card card = new Card();
-        card.setNumber("1234567890123456");
-        card.setHolder("IVAN IVANOV");
-        card.setExpirationDate(LocalDate.of(2029, 12, 31));
+        CreateCardRequest request = new CreateCardRequest(
+                "1234567890123456",
+                LocalDate.of(2029, 12, 31),
+                "IVAN IVANOV");
 
-        // Мокаем: при сохранении юзера — возвращаем юзера, **в котором уже есть карта**
         User savedUser = new User();
         savedUser.setId(userId);
         savedUser.setName("Ivan");
@@ -130,7 +130,7 @@ public class CardServiceTest {
         when(cardMapper.toDto(savedCard)).thenReturn(new CardDto(1L, savedUser.getId(), "1234567890123456", "IVAN IVANOV", LocalDate.of(2029, 12, 31)));
 
         // When
-        CardDto result = cardService.createCard(userId, card);
+        CardDto result = cardService.createCard(userId, request);
 
         // Then
         assertNotNull(result.getId());
@@ -145,11 +145,15 @@ public class CardServiceTest {
         // Given
         Long userId = 999L;
         CardDto cardDto = new CardDto(null, null, "1234", "IVAN PETROV", LocalDate.of(2029, 11, 30));
+        CreateCardRequest request = new CreateCardRequest(
+                "1234",
+                LocalDate.of(2029, 11, 30),
+                "IVAN PETROV");
 
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
 
         // When / Then
-        assertThrows(UserNotFoundException.class, () -> cardService.createCard(userId, cardMapper.toEntity(cardDto)));
+        assertThrows(UserNotFoundException.class, () -> cardService.createCard(userId, request));
         verify(userRepository).findById(userId);
     }
 
