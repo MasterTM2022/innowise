@@ -7,7 +7,14 @@ import lombok.Setter;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "card_info")
+@Table(
+        name = "card_info",
+        indexes = {
+                @Index(name = "idx_card_info_user_id", columnList = "user_id"),
+                @Index(name = "idx_card_info_expiration_date", columnList = "expiration_date"),
+                @Index(name = "idx_card_info_user_id_expiration_date", columnList = "user_id, expiration_date")
+        }
+)
 @Getter
 @Setter
 public class Card {
@@ -22,6 +29,10 @@ public class Card {
 
     @Column(unique = true)
     private String number;
+
+    @Column(nullable = false)
     private String holder;
+
+    @Column(name = "expiration_date", nullable = false)
     private LocalDate expirationDate;
 }

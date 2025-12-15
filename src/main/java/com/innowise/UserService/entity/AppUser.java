@@ -7,7 +7,10 @@ import lombok.Setter;
 
 
 @Entity
-@Table(name = "app_users")
+@Table(name = "app_users",
+        indexes = {
+                @Index(name = "idx_app_users_username", columnList = "username", unique = true)
+        })
 @Getter
 @Setter
 @NoArgsConstructor
@@ -27,8 +30,7 @@ public class AppUser {
     @Column(nullable = false)
     private Role role;
 
-    @OneToOne
-    @JoinColumn(name = "user_id")
+    @OneToOne(mappedBy = "appUser", cascade = CascadeType.ALL)
     private User user;
 
     public enum Role {

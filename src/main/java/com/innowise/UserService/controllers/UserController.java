@@ -1,6 +1,8 @@
 package com.innowise.UserService.controllers;
 
+import com.innowise.UserService.dto.CreateUserRequest;
 import com.innowise.UserService.dto.LinkProfileRequest;
+import com.innowise.UserService.entity.AppUser;
 import com.innowise.UserService.repository.AppUserRepository;
 import com.innowise.UserService.repository.UserRepository;
 import com.innowise.UserService.security.utils.SecurityUtils;
@@ -28,19 +30,19 @@ public class UserController {
     private final SecurityUtils securityUtils;
 
     @PostMapping
-    public ResponseEntity<?> createUser(@Valid @RequestBody UserDto userDto) {
-        User user = userMapper.toEntity(userDto);
-        UserDto createdUserDto = userService.createUser(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdUserDto);
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<UserDto> createUser(@Valid @RequestBody CreateUserRequest request) {
+        UserDto createdUser = userService.createProfileForCurrentUser(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
     }
 
-    @PutMapping("/link-profile")
-    @PreAuthorize("#request.userId == authentication.principal.id or hasRole('ADMIN')")
-    public ResponseEntity<Void> linkUserProfile(@RequestBody LinkProfileRequest request) {
-        Long currentAppUserId = securityUtils.getCurrentAppUser(appUserRepository).getId();
-        userService.linkAppUserToExistingUser(currentAppUserId, request.userId());
-        return ResponseEntity.ok().build();
-    }
+//    @PutMapping("/link-profile")
+//    @PreAuthorize("#request.userId == authentication.principal.id or hasRole('ADMIN')")
+//    public ResponseEntity<Void> linkUserProfile(@RequestBody LinkProfileRequest request) {
+//        Long currentAppUserId = securityUtils.getCurrentAppUser(appUserRepository).getId();
+//        userService.linkAppUserToExistingUser(currentAppUserId, request.userId());
+//        return ResponseEntity.ok().build();
+//    }
 
 
     @GetMapping
@@ -69,14 +71,14 @@ public class UserController {
                 .body("Required parameter: 'id' or 'email'");
     }
 
-    @PutMapping("/update/{id}")
+    @PutMapping("/{id}")
     @PreAuthorize("#id == authentication.principal.id or hasRole('ADMIN')")
     public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody UserDto userDto) {
         UserDto updatedUser = userService.updateUser(id, userDto);
         return ResponseEntity.status(HttpStatus.OK).body(updatedUser);
     }
 
-    @DeleteMapping("/deleteUser/{id}")
+    @DeleteMapping("/{id}")
     @PreAuthorize("#id == authentication.principal.appUser.id or hasRole('ADMIN')")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);

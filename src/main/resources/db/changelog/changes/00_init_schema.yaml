@@ -1,86 +1,219 @@
 databaseChangeLog:
-  - changeSet:
-      id: 1761397756352-1
-      author: perov (generated)
-      changes:
-        - createTable:
-            columns:
-              - column:
-                  constraints:
-                    nullable: false
-                    primaryKey: true
-                    primaryKeyName: card_info_pkey
-                  name: id
-                  type: BIGINT
-                  autoIncrement: true
-              - column:
-                  constraints:
-                    nullable: false
-                  name: user_id
-                  type: BIGINT
-              - column:
-                  constraints:
-                    nullable: false
-                  name: number
-                  type: VARCHAR(100)
-              - column:
-                  constraints:
-                    nullable: false
-                  name: holder
-                  type: VARCHAR(100)
-              - column:
-                  constraints:
-                    nullable: false
-                  name: expiration_date
-                  type: date
-            tableName: card_info
-  - changeSet:
-      id: 1761397756352-2
-      author: perov (generated)
-      changes:
-        - createTable:
-            columns:
-              - column:
-                  constraints:
-                    nullable: false
-                    primaryKey: true
-                    primaryKeyName: users_pkey
-                  name: id
-                  type: BIGINT
-                  autoIncrement: true
-              - column:
-                  constraints:
-                    nullable: false
-                  name: name
-                  type: VARCHAR(100)
-              - column:
-                  constraints:
-                    nullable: false
-                  name: surname
-                  type: VARCHAR(100)
-              - column:
-                  constraints:
-                    nullable: false
-                  name: birth_date
-                  type: date
-              - column:
-                  constraints:
-                    nullable: false
-                  name: email
-                  type: VARCHAR(100)
-            tableName: users
-  - changeSet:
-      id: 1761397756352-3
-      author: perov (generated)
-      changes:
-        - addForeignKeyConstraint:
-            baseColumnNames: user_id
-            baseTableName: card_info
-            constraintName: fk_id_users
-            deferrable: false
-            initiallyDeferred: false
-            onDelete: NO ACTION
-            onUpdate: NO ACTION
-            referencedColumnNames: id
-            referencedTableName: users
-            validate: true
+- changeSet:
+    id: 1765825315060-1
+    author: perov (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: app_usersPK
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: password
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: role
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: username
+            type: VARCHAR(255)
+        tableName: app_users
+- changeSet:
+    id: 1765825315060-2
+    author: perov (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: card_infoPK
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: expiration_date
+            type: date
+        - column:
+            constraints:
+              nullable: false
+            name: holder
+            type: VARCHAR(255)
+        - column:
+            name: number
+            type: VARCHAR(255)
+        - column:
+            name: user_id
+            type: BIGINT
+        tableName: card_info
+- changeSet:
+    id: 1765825315060-3
+    author: perov (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: usersPK
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: birth_date
+            type: date
+        - column:
+            constraints:
+              nullable: false
+            name: email
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: name
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: surname
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: app_user_id
+            type: BIGINT
+        tableName: users
+- changeSet:
+    id: 1765825315060-4
+    author: perov (generated)
+    changes:
+    - addUniqueConstraint:
+        columnNames: number
+        constraintName: UC_CARD_INFONUMBER_COL
+        tableName: card_info
+- changeSet:
+    id: 1765825315060-5
+    author: perov (generated)
+    changes:
+    - addUniqueConstraint:
+        columnNames: app_user_id
+        constraintName: UC_USERSAPP_USER_ID_COL
+        tableName: users
+- changeSet:
+    id: 1765825315060-6
+    author: perov (generated)
+    changes:
+    - addUniqueConstraint:
+        columnNames: email
+        constraintName: UC_USERSEMAIL_COL
+        tableName: users
+- changeSet:
+    id: 1765825315060-7
+    author: perov (generated)
+    changes:
+    - addUniqueConstraint:
+        columnNames: username
+        constraintName: idx_app_users_username
+        tableName: app_users
+- changeSet:
+    id: 1765825315060-8
+    author: perov (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: expiration_date
+        indexName: idx_card_info_expiration_date
+        tableName: card_info
+- changeSet:
+    id: 1765825315060-9
+    author: perov (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: user_id
+        indexName: idx_card_info_user_id
+        tableName: card_info
+- changeSet:
+    id: 1765825315060-10
+    author: perov (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: user_id
+        - column:
+            name: expiration_date
+        indexName: idx_card_info_user_id_expiration_date
+        tableName: card_info
+- changeSet:
+    id: 1765825315060-11
+    author: perov (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: surname
+        - column:
+            name: name
+        - column:
+            name: birth_date
+        indexName: idx_users_full_search
+        tableName: users
+- changeSet:
+    id: 1765825315060-12
+    author: perov (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: surname
+        - column:
+            name: name
+        indexName: idx_users_surname_name
+        tableName: users
+- changeSet:
+    id: 1765825315060-13
+    author: perov (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: app_user_id
+        baseTableName: users
+        constraintName: FK7k2fkqdm4g0k7e0qhlhl9dbsp
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: app_users
+        validate: true
+- changeSet:
+    id: 1765825315060-14
+    author: perov (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: user_id
+        baseTableName: card_info
+        constraintName: FK9h7xe6m30u9w5shrcq3pkwjca
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: users
+        validate: true
+

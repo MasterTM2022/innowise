@@ -1,6 +1,7 @@
 package com.innowise.UserService.security.utils;
 
 import com.innowise.UserService.entity.AppUser;
+import com.innowise.UserService.entity.User;
 import com.innowise.UserService.repository.AppUserRepository;
 import com.innowise.UserService.security.service.AppUserDetails;
 import org.springframework.security.core.Authentication;
@@ -29,5 +30,22 @@ public class SecurityUtils {
         }
 
         throw new IllegalStateException("Unknown principal type: " + principal.getClass());
+    }
+
+    public Long getCurrentUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+
+        if (auth == null || !(auth.getPrincipal() instanceof AppUserDetails details)) {
+            throw new IllegalStateException("User is not authenticated");
+        }
+
+        AppUser appUser = details.getAppUser();
+        User user = appUser.getUser();
+
+        if (user == null) {
+            throw new IllegalStateException("No user profile linked to this account");
+        }
+
+        return user.getId();
     }
 }
