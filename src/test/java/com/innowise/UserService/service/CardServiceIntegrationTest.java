@@ -26,7 +26,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @Testcontainers
 @SpringBootTest
-@ActiveProfiles("test")  // ← Указываем использовать application-test.yaml
+@ActiveProfiles("test")
 @Transactional
 class CardServiceIntegrationTest {
 
@@ -58,9 +58,6 @@ class CardServiceIntegrationTest {
     @Autowired
     private UserRepository userRepository;
 
-//    @Autowired
-//    private TestEntityManager entityManager; // ← Для сброса кэша в тестах
-
     @Test
     void createCard_ShouldSaveCardToDatabase_WhenUserExists() {
         // Given
@@ -80,7 +77,7 @@ class CardServiceIntegrationTest {
         CardDto result = cardService.createCard(savedUser.getId(), card);
 
         // Then
-        assertNotNull(result.getId()); // ← Теперь не null
+        assertNotNull(result.getId());
         assertEquals("1234567890123456", result.getNumber());
 
         Card savedCard = cardRepository.findById(result.getId()).orElse(null);

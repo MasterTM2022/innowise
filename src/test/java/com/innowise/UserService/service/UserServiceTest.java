@@ -1,8 +1,12 @@
 package com.innowise.UserService.service;
+
 import com.innowise.UserService.dto.UserDto;
+import com.innowise.UserService.entity.AppUser;
 import com.innowise.UserService.entity.User;
 import com.innowise.UserService.mapper.UserMapper;
+import com.innowise.UserService.repository.AppUserRepository;
 import com.innowise.UserService.repository.UserRepository;
+import com.innowise.UserService.service.exception.AppUserNotFoundException;
 import com.innowise.UserService.service.exception.EmailAlreadyExistsException;
 import com.innowise.UserService.service.exception.UserNotFoundException;
 import org.junit.jupiter.api.Test;
@@ -15,6 +19,7 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 
+import static org.assertj.core.api.Assertions.*;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
@@ -25,6 +30,9 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 public class UserServiceTest {
+    @Mock
+    private AppUserRepository appUserRepository;
+
     @Mock
     private UserRepository userRepository;
 
@@ -231,4 +239,79 @@ public class UserServiceTest {
         verify(userRepository).existsById(id);
         verify(userRepository, never()).deleteById(id);
     }
+
+    @Test
+    void linkAppUserToExistingUser_ShouldLinkUser_WhenBothExist() {
+        // Given
+        Long appUserId = 1L;
+        Long userId = 2L;
+
+        AppUser appUser = new AppUser();
+        appUser.setId(appUserId);
+
+        User user = new User();
+        user.setId(userId);
+        user.setName("Ivan");
+
+        when(appUserRepository.findById(appUserId)).thenReturn(Optional.of(appUser));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(user));
+
+        // When
+        userService.linkAppUserToExistingUser(appUserId, userId);
+
+        // Then
+        assertThat(appUser.getUser()).isNotNull();
+        assertThat(appUser.getUser().getId()).isEqualTo(userId);
+        assertThat(appUser.getUser().getName()).isEqualTo("Ivan");
+
+        verify(appUserRepository).findById(appUserId);
+        verify(userRepository).findById(userId);
+        verify(appUserRepository).save(appUser);
+    }
+
+    @Test
+    void linkAppUserToExistingUser_ShouldThrowAppUserNotFound_WhenAppUserMissing() {
+        // Given
+        Long appUserId = 1L;
+        Long userId = 2L;
+
+        when(appUserRepository.findById(appUserId)).thenReturn(Optional.empty());
+
+        // When / Then
+        AppUserNotFoundException exception = assertThrows(
+                AppUserNotFoundException.class,
+                () -> userService.linkAppUserToExistingUser(appUserId, userId)
+        );
+
+        assertThat(exception.getMessage()).isEqualTo("AppUser not found");
+        verify(appUserRepository).findById(appUserId);
+        verify(userRepository, never()).findById(any());
+        verify(appUserRepository, never()).save(any());
+    }
+
+    @Test
+    void linkAppUserToExistingUser_ShouldThrowUserNotFound_WhenUserMissing() {
+        // Given
+        Long appUserId = 1L;
+        Long userId = 2L;
+
+        AppUser appUser = new AppUser();
+        appUser.setId(appUserId);
+
+        when(appUserRepository.findById(appUserId)).thenReturn(Optional.of(appUser));
+        when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+        // When / Then
+        UserNotFoundException exception = assertThrows(
+                UserNotFoundException.class,
+                () -> userService.linkAppUserToExistingUser(appUserId, userId)
+        );
+
+        assertThat(exception.getMessage()).isEqualTo("User not found");
+        verify(appUserRepository).findById(appUserId);
+        verify(userRepository).findById(userId);
+        verify(appUserRepository, never()).save(any());
+    }
+
+
 }

@@ -110,7 +110,7 @@ public class CardService {
             throw new IllegalArgumentException("Any 4 digits must be exactly 4 numeric characters");
         }
         Pageable pageable = PageRequest.of(page, size);
-        Page<Card> cardsPage = cardRepository.findByLast4Digits(fourDigits, pageable);
+        Page<Card> cardsPage = cardRepository.findBy4Digits(fourDigits, pageable);
         return cardsPage.map(cardMapper::toDto);
     }
 

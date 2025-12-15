@@ -1,0 +1,72 @@
+databaseChangeLog:
+- changeSet:
+    id: 1765433963305-31
+    author: perov (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: name
+        indexName: idx_items_name
+        tableName: items
+- changeSet:
+    id: 1765433963305-32
+    author: perov (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: price
+        indexName: idx_items_price
+        tableName: items
+- changeSet:
+    id: 1765433963305-33
+    author: perov (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: item_id
+        indexName: idx_order_items_item_id
+        tableName: order_items
+- changeSet:
+    id: 1765433963305-34
+    author: perov (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: order_id
+        indexName: idx_order_items_order_id
+        tableName: order_items
+- changeSet:
+    id: 1765433963305-35
+    author: perov (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: creation_date
+        indexName: idx_orders_creation_date
+        tableName: orders
+- changeSet:
+    id: 1765433963305-36
+    author: perov (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: status
+        indexName: idx_orders_status
+        tableName: orders
+- changeSet:
+    id: 1765433963305-37
+    author: perov (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: user_id
+        indexName: idx_orders_user_id
+        tableName: orders
+

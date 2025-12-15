@@ -31,5 +31,5 @@ public interface CardRepository extends JpaRepository<Card, Long> {
     // Native SQL
     @Query(value = "SELECT * FROM card_info WHERE number LIKE CONCAT('%', :fourDigits, '%')",
             nativeQuery = true)
-    Page<Card> findByLast4Digits(@Param("fourDigits") String fourDigits, Pageable pageable);
+    Page<Card> findBy4Digits(@Param("fourDigits") String fourDigits, Pageable pageable);
 }

@@ -1,0 +1,63 @@
+databaseChangeLog:
+- changeSet:
+    id: 1765395002221-19
+    author: perov (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: app_usersPK
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: password
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: role
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: username
+            type: VARCHAR(255)
+        - column:
+            name: user_id
+            type: BIGINT
+        tableName: app_users
+- changeSet:
+    id: 1765395002221-20
+    author: perov (generated)
+    changes:
+    - addUniqueConstraint:
+        columnNames: user_id
+        constraintName: UC_APP_USERSUSER_ID_COL
+        tableName: app_users
+- changeSet:
+    id: 1765395002221-21
+    author: perov (generated)
+    changes:
+    - addUniqueConstraint:
+        columnNames: username
+        constraintName: idx_app_users_username
+        tableName: app_users
+- changeSet:
+    id: 1765395002221-22
+    author: perov (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: user_id
+        baseTableName: app_users
+        constraintName: FKcntfs8pirqxkd084sp4m4trfl
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: users
+        validate: true

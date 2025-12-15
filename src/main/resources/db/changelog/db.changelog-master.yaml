@@ -1,7 +1,9 @@
 databaseChangeLog:
   - include:
-      file: db\changelog\changes\00_init_schema.yaml
+      file: db\changelog\changes\01_init_user_card.yaml
   - include:
-      file: db\changelog\changes\01_after_init.yaml
+      file: db\changelog\changes\02_add_appuser.yaml
   - include:
-      file: db\changelog\changes\02_create_app_users_table.yaml
+      file: db\changelog\changes\03_add_order_item_orderItem.yaml
+  - include:
+      file: db\changelog\changes\04_add_indexes_order_item_orderItem.yaml

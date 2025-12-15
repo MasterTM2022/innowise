@@ -4,7 +4,11 @@ spring:
     change-log: classpath:/db/changelog/db.changelog-master.yaml
   cache:
     type: none
-
+  cloud:
+    compatibility-verifier:
+      enabled: false
+    refresh:
+      enabled: false
   jpa:
     hibernate:
       ddl-auto: create-drop
@@ -24,3 +28,7 @@ spring:
 
 redis:
   enabled: false
+
+#user:
+#  service:
+#    url: http://localhost:${wiremock.port}

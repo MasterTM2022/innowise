@@ -16,12 +16,10 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
-
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.time.LocalDate;
 import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @Testcontainers
 @SpringBootTest
@@ -173,11 +171,11 @@ class UserServiceIntegrationTest {
         Page<UserDto> result = userService.getAllUsers(page, size);
 
         // Then
-        assertEquals(2, result.getContent().size()); // there are 2 users on page (size = 2)
-        assertEquals(3, result.getTotalElements());   // Total 3 users
-        assertEquals(2, result.getTotalPages());      // 3 / 2 = 2 pages
-        assertEquals(0, result.getNumber());          // number of page
-        assertTrue(result.hasNext());                 // there is next page
+        assertEquals(2, result.getContent().size());
+        assertEquals(3, result.getTotalElements());
+        assertEquals(2, result.getTotalPages());
+        assertEquals(0, result.getNumber());
+        assertTrue(result.hasNext());
 
         List<UserDto> content = result.getContent();
         UserDto firstUser = content.get(0);
@@ -237,11 +235,11 @@ class UserServiceIntegrationTest {
         Page<UserDto> result = userService.getAllUsers(page, size);
 
         // Then
-        assertEquals(1, result.getContent().size()); // Only 1 user on the 2nd page
+        assertEquals(1, result.getContent().size());
         assertEquals(3, result.getTotalElements());
         assertEquals(2, result.getTotalPages());
         assertEquals(1, result.getNumber());
-        assertFalse(result.hasNext()); // There are no pages
+        assertFalse(result.hasNext());
         assertTrue(result.hasPrevious());
 
         UserDto lastUser = result.getContent().get(0);
