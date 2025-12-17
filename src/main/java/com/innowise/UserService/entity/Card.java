@@ -7,7 +7,14 @@ import lombok.Setter;
 import java.time.LocalDate;
 
 @Entity
-@Table(name = "card_info")
+@Table(
+        name = "card_info",
+        indexes = {
+                @Index(name = "idx_card_info_user_id", columnList = "user_id"),
+                @Index(name = "idx_card_info_expiration_date", columnList = "expiration_date"),
+                @Index(name = "idx_card_info_user_id_expiration_date", columnList = "user_id, expiration_date")
+        }
+)
 @Getter
 @Setter
 public class Card {
@@ -22,48 +29,10 @@ public class Card {
 
     @Column(unique = true)
     private String number;
-    private String holder;
-    private LocalDate expirationDate;
 
-//    // Getters and Setters
-//
-//    public Long getId() {
-//        return id;
-//    }
-//
-//    public void setId(Long id) {
-//        this.id = id;
-//    }
-//
-//    public User getUser() {
-//        return this.user;
-//    }
-//
-//    public void setUser(User user) {
-//        this.user = user;
-//    }
-//
-//    public String getNumber() {
-//        return number;
-//    }
-//
-//    public void setNumber(String number) {
-//        this.number = number;
-//    }
-//
-//    public String getHolder() {
-//        return holder;
-//    }
-//
-//    public void setHolder(String holder) {
-//        this.holder = holder;
-//    }
-//
-//    public LocalDate getExpirationDate() {
-//        return expirationDate;
-//    }
-//
-//    public void setExpirationDate(LocalDate expirationDate) {
-//        this.expirationDate = expirationDate;
-//    }
+    @Column(nullable = false)
+    private String holder;
+
+    @Column(name = "expiration_date", nullable = false)
+    private LocalDate expirationDate;
 }

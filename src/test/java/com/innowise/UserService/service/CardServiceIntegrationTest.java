@@ -1,6 +1,7 @@
 package com.innowise.UserService.service;
 
 import com.innowise.UserService.dto.CardDto;
+import com.innowise.UserService.dto.CreateCardRequest;
 import com.innowise.UserService.entity.Card;
 import com.innowise.UserService.entity.User;
 import com.innowise.UserService.repository.CardRepository;
@@ -71,16 +72,16 @@ class CardServiceIntegrationTest {
         user.setBirthDate(LocalDate.of(1990, 5, 15));
         User savedUser = userRepository.save(user);
 
-        Card card = new Card();
-        card.setNumber("1234567890123456");
-        card.setHolder("IVAN IVANOV");
-        card.setExpirationDate(LocalDate.of(2029, 12, 31));
+        CreateCardRequest request = new CreateCardRequest(
+                "1234567890123456",
+                LocalDate.of(2029, 12, 31),
+                "IVAN IVANOV");
 
         // When
-        CardDto result = cardService.createCard(savedUser.getId(), card);
+        CardDto result = cardService.createCard(savedUser.getId(), request);
 
         // Then
-        assertNotNull(result.getId()); // ← Теперь не null
+        assertNotNull(result.getId());
         assertEquals("1234567890123456", result.getNumber());
 
         Card savedCard = cardRepository.findById(result.getId()).orElse(null);

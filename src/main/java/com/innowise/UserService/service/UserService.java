@@ -1,12 +1,16 @@
 package com.innowise.UserService.service;
 
+import com.innowise.UserService.dto.CreateUserRequest;
 import com.innowise.UserService.dto.UserDto;
+import com.innowise.UserService.entity.AppUser;
 import com.innowise.UserService.entity.User;
 import com.innowise.UserService.mapper.UserMapper;
-import com.innowise.UserService.repository.CardRepository;
+import com.innowise.UserService.repository.AppUserRepository;
 import com.innowise.UserService.repository.UserRepository;
+import com.innowise.UserService.security.utils.SecurityUtils;
 import com.innowise.UserService.service.exception.*;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -14,7 +18,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Optional;
 
@@ -23,8 +26,9 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserService {
 
+    private final SecurityUtils securityUtils;
     private final UserRepository userRepository;
-    private final CardRepository cardRepository;
+    private final AppUserRepository appUserRepository;
     private final UserMapper userMapper;
 
     // Create
@@ -84,6 +88,18 @@ public class UserService {
         return userMapper.toDto(updatedUser);
     }
 
+    // Link AppUser and User
+    public void linkAppUserToExistingUser(Long appUserId, Long userId) {
+        AppUser appUser = appUserRepository.findById(appUserId)
+                .orElseThrow(() -> new AppUserNotFoundException("AppUser not found"));
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found"));
+
+        appUser.setUser(user);
+        appUserRepository.save(appUser);
+    }
+
     // Delete
     @Transactional
     @CacheEvict(value = "users", key = "#id")
@@ -94,4 +110,25 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
+    public UserDto createProfileForCurrentUser(CreateUserRequest request) {
+        AppUser currentAppUser = securityUtils.getCurrentAppUser(appUserRepository);
+
+        if (currentAppUser.getUser() != null) {
+            throw new IllegalStateException("User profile already exists");
+        }
+
+        User user = new User();
+        user.setAppUser(currentAppUser);
+        user.setName(request.name());
+        user.setSurname(request.surname());
+        user.setBirthDate(request.birthDate());
+        user.setEmail(request.email());
+
+        User savedUser = userRepository.save(user);
+
+        currentAppUser.setUser(savedUser);
+        appUserRepository.save(currentAppUser);
+
+        return userMapper.toDto(savedUser);
+    }
 }
