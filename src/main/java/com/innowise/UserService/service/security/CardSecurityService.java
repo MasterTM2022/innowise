@@ -24,7 +24,7 @@ public class CardSecurityService {
     }
 
     public boolean canDeleteCard(Authentication authentication, Long cardId) {
-        return canViewCard(authentication, cardId); // в вашем случае права одинаковые
+        return canViewCard(authentication, cardId);
     }
 
     private boolean isAdmin(Authentication authentication) {
