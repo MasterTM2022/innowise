@@ -1,13 +1,16 @@
 package com.innowise.UserService.service;
 
+import com.innowise.UserService.dto.CreateUserRequest;
 import com.innowise.UserService.dto.UserDto;
 import com.innowise.UserService.entity.AppUser;
 import com.innowise.UserService.entity.User;
 import com.innowise.UserService.mapper.UserMapper;
 import com.innowise.UserService.repository.AppUserRepository;
 import com.innowise.UserService.repository.UserRepository;
+import com.innowise.UserService.security.utils.SecurityUtils;
 import com.innowise.UserService.service.exception.*;
 import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -23,6 +26,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class UserService {
 
+    private final SecurityUtils securityUtils;
     private final UserRepository userRepository;
     private final AppUserRepository appUserRepository;
     private final UserMapper userMapper;
@@ -106,4 +110,25 @@ public class UserService {
         userRepository.deleteById(id);
     }
 
+    public UserDto createProfileForCurrentUser(CreateUserRequest request) {
+        AppUser currentAppUser = securityUtils.getCurrentAppUser(appUserRepository);
+
+        if (currentAppUser.getUser() != null) {
+            throw new IllegalStateException("User profile already exists");
+        }
+
+        User user = new User();
+        user.setAppUser(currentAppUser);
+        user.setName(request.name());
+        user.setSurname(request.surname());
+        user.setBirthDate(request.birthDate());
+        user.setEmail(request.email());
+
+        User savedUser = userRepository.save(user);
+
+        currentAppUser.setUser(savedUser);
+        appUserRepository.save(currentAppUser);
+
+        return userMapper.toDto(savedUser);
+    }
 }

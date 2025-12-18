@@ -1,6 +1,8 @@
 package com.innowise.UserService.controllers;
 
+import com.innowise.UserService.dto.CreateUserRequest;
 import com.innowise.UserService.dto.LinkProfileRequest;
+import com.innowise.UserService.entity.AppUser;
 import com.innowise.UserService.repository.AppUserRepository;
 import com.innowise.UserService.repository.UserRepository;
 import com.innowise.UserService.security.utils.SecurityUtils;
@@ -15,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -22,29 +25,16 @@ import org.springframework.web.bind.annotation.*;
 public class UserController {
 
     private final UserService userService;
-    private final UserMapper userMapper;
-    private final UserRepository userRepository;
-    private final AppUserRepository appUserRepository;
-    private final SecurityUtils securityUtils;
 
     @PostMapping
-    public ResponseEntity<?> createUser(@Valid @RequestBody UserDto userDto) {
-        User user = userMapper.toEntity(userDto);
-        UserDto createdUserDto = userService.createUser(user);
-        return ResponseEntity.status(HttpStatus.CREATED).body(createdUserDto);
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<UserDto> createUser(@Valid @RequestBody CreateUserRequest request) {
+        UserDto createdUser = userService.createProfileForCurrentUser(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(createdUser);
     }
-
-    @PutMapping("/link-profile")
-    @PreAuthorize("#request.userId == authentication.principal.id or hasRole('ADMIN')")
-    public ResponseEntity<Void> linkUserProfile(@RequestBody LinkProfileRequest request) {
-        Long currentAppUserId = securityUtils.getCurrentAppUser(appUserRepository).getId();
-        userService.linkAppUserToExistingUser(currentAppUserId, request.userId());
-        return ResponseEntity.ok().build();
-    }
-
 
     @GetMapping
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<Page<UserDto>> getAllUsers(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -52,7 +42,7 @@ public class UserController {
     }
 
     @GetMapping("/search")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<?> searchUser(
             @RequestParam(required = false) Long id,
             @RequestParam(required = false) String email) {
@@ -60,24 +50,23 @@ public class UserController {
         if (id != null) {
             return ResponseEntity.status(HttpStatus.OK).body(userService.getUserById(id));
         }
-
         if (email != null) {
             return ResponseEntity.status(HttpStatus.OK).body(userService.getUserByEmail(email));
         }
-
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                .body("Required parameter: 'id' or 'email'");
+        throw new ResponseStatusException(
+                HttpStatus.BAD_REQUEST,
+                "Parameter 'id' and/or email are required");
     }
 
-    @PutMapping("/update/{id}")
-    @PreAuthorize("#id == authentication.principal.id or hasRole('ADMIN')")
-    public ResponseEntity<?> updateUser(@PathVariable Long id, @RequestBody UserDto userDto) {
+    @PutMapping("/{id}")
+    @PreAuthorize("@userSecurityService.canManageUser(authentication, #id)")
+    public ResponseEntity<UserDto> updateUser(@PathVariable Long id, @RequestBody UserDto userDto) {
         UserDto updatedUser = userService.updateUser(id, userDto);
         return ResponseEntity.status(HttpStatus.OK).body(updatedUser);
     }
 
-    @DeleteMapping("/deleteUser/{id}")
-    @PreAuthorize("#id == authentication.principal.appUser.id or hasRole('ADMIN')")
+    @DeleteMapping("/{id}")
+    @PreAuthorize("@userSecurityService.canManageUser(authentication, #id)")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();

@@ -37,10 +37,19 @@ public class User {
     @Column(unique = true, nullable = false)
     private String email;
 
+    @OneToOne
+    @JoinColumn(
+            name = "app_user_id",
+            nullable = false,
+            unique = true,
+            foreignKey = @ForeignKey(name = "fk_users_app_user")
+    )
+    private AppUser appUser;
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Card> cards = new ArrayList<>();
 
-//    // Getters and Setters
+    //    // Getters and Setters
     public void addCard(Card card) {
         cards.add(card);
         card.setUser(this);

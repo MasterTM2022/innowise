@@ -30,8 +30,7 @@ public class AppUser {
     @Column(nullable = false)
     private Role role;
 
-    @OneToOne
-    @JoinColumn(name = "user_id")
+    @OneToOne(mappedBy = "appUser", cascade = CascadeType.ALL)
     private User user;
 
     public enum Role {
