@@ -12,11 +12,8 @@ import org.mapstruct.MappingTarget;
 @Mapper(componentModel = "spring", uses = {ItemMapper.class})
 public interface OrderMapper {
 
-//    @Mapping(target = "userId", source = "userId")
-//    @Mapping(target = "orderItems", source = "orderItems")
     OrderDtoCreate toCreateDto(Order order);
 
-//    @Mapping(target = "userId", source = "userId")
     OrderResponseDto toResponseDto(Order order);
 
     Order toEntity(OrderDtoCreate orderDtoCreate);

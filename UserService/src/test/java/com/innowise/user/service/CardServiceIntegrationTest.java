@@ -49,11 +49,6 @@ class CardServiceIntegrationTest {
         registry.add("spring.datasource.password", postgres::getPassword);
         registry.add("spring.redis.host", redis::getHost);
         registry.add("spring.redis.port", redis::getFirstMappedPort);
-
-        // ДОБАВЬТЕ ЭТИ СТРОКИ ДЛЯ ДИАГНОСТИКИ:
-        System.out.println("Redis host: " + redis.getHost());
-        System.out.println("Redis port: " + redis.getFirstMappedPort());
-        System.out.println("Redis container running: " + redis.isRunning());
     }
 
     @Autowired
@@ -64,12 +59,6 @@ class CardServiceIntegrationTest {
 
     @Autowired
     private UserRepository userRepository;
-
-    @Test
-    void testRedisConnection() {
-        // Простой тест для проверки подключения
-        assertThat(redis.isRunning()).isTrue();
-    }
 
     @Test
     void createCard_ShouldSaveCardToDatabase_WhenUserExists() {
