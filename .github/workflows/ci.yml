@@ -1,82 +1,151 @@
 name: CI Pipeline
-on: [push]
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
 
 env:
-  SPRING_PROFILES_ACTIVE: test
+  # Настройки Maven
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2/repository"
+  # Теги для Docker образов
+  AUTH_SERVICE_IMAGE: ${{ github.repository }}/auth-service:${{ github.sha }}
+  USER_SERVICE_IMAGE: ${{ github.repository }}/user-service:${{ github.sha }}
+  ORDER_SERVICE_IMAGE: ${{ github.repository }}/order-service:${{ github.sha }}
 
 jobs:
-  build-and-test:
+  # ==================== BUILD ====================
+  build:
+    name: Build Services
     runs-on: ubuntu-latest
-    name: Build and Test
+    strategy:
+      matrix:
+        service: [common, AuthService, UserService, OrderService]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up JDK 21
+      - name: Set up JDK 17
         uses: actions/setup-java@v4
         with:
-          java-version: '21'
+          java-version: '17'
           distribution: 'temurin'
-          cache: 'maven'
+          cache: maven
 
-      - name: Build with Maven
-        run: mvn -B clean compile
+      - name: Build ${matrix.service}
+        run: |
+          cd ${{ matrix.service == 'common' && 'common' || matrix.service }}
+          mvn clean compile -DskipTests
 
-      - name: Run Tests
-        run: mvn test
+  # ==================== TEST ====================
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [common, AuthService, UserService, OrderService]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Start Redis (for integration tests)
+        run: |
+          sudo docker run -d --name redis-test -p 6379:6379 redis:7-alpine
+          sleep 5
+
+      - name: Run tests for ${matrix.service}
+        run: |
+          cd ${{ matrix.service == 'common' && 'common' || matrix.service }}
+          mvn test
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results-${{ matrix.service }}
+          path: ${{ matrix.service == 'common' && 'common' || matrix.service }}/target/surefire-reports/
+
+  # ==================== CODE ANALYSIS (optional) ====================
+  code-analysis:
+    name: Code Analysis
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Run Maven verify with coverage
+        run: mvn verify -Pjacoco -DskipTests
 
       - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v4
+        with:
+          file: ./target/site/jacoco/jacoco.xml
+          flags: unittests
+          name: codecov-umbrella
+        continue-on-error: true
 
-      - name: Run SonarQube Analysis
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: >
-          mvn -B sonar:sonar
-          -Dsonar.projectKey=MasterTM2022_innowise
-          -Dsonar.organization=mastertm2022
-          -Dsonar.host.url=https://sonarcloud.io
-          -Dsonar.login=${{ secrets.SONAR_TOKEN }}
-          -Dsonar.java.binaries=target/classes
-          -Dsonar.sources=src/main/java
-          -Dsonar.tests=src/test/java
-
-  docker-build-push:
-    needs: build-and-test
+  # ==================== BUILD DOCKER IMAGES ====================
+  build-docker-images:
+    name: Build and Push Docker Images
     runs-on: ubuntu-latest
-    name: Build and Push Docker Image
-    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/week3'
-    permissions:
-      contents: read
-      packages: write
+    needs: [build, test]
+    strategy:
+      matrix:
+        service:
+          - { name: "auth-service", dir: "AuthService", port: "8080" }
+          - { name: "user-service", dir: "UserService", port: "8081" }
+          - { name: "order-service", dir: "OrderService", port: "8082" }
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: maven
+
+      - name: Build JAR for ${{ matrix.service.name }}
+        run: |
+          cd ${{ matrix.service.dir }}
+          mvn clean package -DskipTests
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Log in to GHCR
+      - name: Login to GitHub Container Registry
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ github.token }}
 
-      - name: Extract metadata (tags, labels)
-        id: meta
-        uses: docker/metadata-action@v5
+      - name: Build and push ${{ matrix.service.name }}
+        uses: docker/build-push-action@v6
         with:
-          images: ghcr.io/${{ github.repository_owner }}/app
-          tags: |
-            latest
-            ${{ github.sha }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v5
-        with:
-          context: .
+          context: ${{ matrix.service.dir }}
+          file: ${{ matrix.service.dir }}/Dockerfile
           push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
+          tags: |
+            ghcr.io/${{ github.repository }}/${{ matrix.service.name }}:${{ github.sha }}
+            ghcr.io/${{ github.repository }}/${{ matrix.service.name }}:latest
+
+      - name: Verify image
+        run: |
+          docker pull ghcr.io/${{ github.repository }}/${{ matrix.service.name }}:${{ github.sha }}

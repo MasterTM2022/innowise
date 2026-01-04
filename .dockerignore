@@ -1,8 +1,0 @@
-.git
-target
-.m2
-.idea
-*.iml
-Dockerfile
-src/main/resources/docker-compose.yaml
-README.md

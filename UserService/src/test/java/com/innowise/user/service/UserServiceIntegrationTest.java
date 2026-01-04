@@ -1,0 +1,249 @@
+package com.innowise.user.service;
+
+import com.innowise.common.dto.UserDto;
+import com.innowise.user.UserServiceApplication;
+import com.innowise.user.dto.CreateUserRequest;
+import com.innowise.user.entity.User;
+import com.innowise.user.repository.UserRepository;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.transaction.annotation.Transactional;
+import org.testcontainers.containers.GenericContainer;
+import org.testcontainers.containers.PostgreSQLContainer;
+import org.testcontainers.junit.jupiter.Container;
+import org.testcontainers.junit.jupiter.Testcontainers;
+
+import java.time.LocalDate;
+import java.util.List;
+
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.junit.jupiter.api.Assertions.*;
+
+@Testcontainers
+@SpringBootTest(classes = UserServiceApplication.class)
+@ActiveProfiles("test")
+@Transactional
+class UserServiceIntegrationTest {
+
+    @Container
+    static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:15")
+            .withDatabaseName("InnoBaseTest")
+            .withUsername("postgresTest")
+            .withPassword("070696Test");
+
+    @Container
+    static GenericContainer<?> redis = new GenericContainer<>("redis:7-alpine")
+            .withExposedPorts(6379);
+
+    @DynamicPropertySource
+    static void configureProperties(DynamicPropertyRegistry registry) {
+        registry.add("spring.datasource.url", postgres::getJdbcUrl);
+        registry.add("spring.datasource.username", postgres::getUsername);
+        registry.add("spring.datasource.password", postgres::getPassword);
+        registry.add("spring.redis.host", redis::getHost);
+        registry.add("spring.redis.port", redis::getFirstMappedPort);
+
+        // ДОБАВЬТЕ ЭТИ СТРОКИ ДЛЯ ДИАГНОСТИКИ:
+        System.out.println("Redis host: " + redis.getHost());
+        System.out.println("Redis port: " + redis.getFirstMappedPort());
+        System.out.println("Redis container running: " + redis.isRunning());
+    }
+
+    @Autowired
+    private UserService userService;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @BeforeEach
+    void setUp() {
+        userRepository.deleteAll();
+    }
+
+    @Test
+    void testRedisConnection() {
+        // Простой тест для проверки подключения
+        assertThat(redis.isRunning()).isTrue();
+    }
+
+    @Test
+    void createUser_ShouldSaveUserToDatabase() {
+        // Given
+        CreateUserRequest userDto = new CreateUserRequest(
+                "Ivan",
+                "Ivanov",
+                LocalDate.of(1990, 5, 15),
+                "ivan@example.com");
+
+        // When
+        UserDto result = userService.createUser(userDto);
+
+        // Then
+        assertNotNull(result.getId());
+        assertEquals("ivan@example.com", result.getEmail());
+
+        User savedUser = userRepository.findById(result.getId()).orElse(null);
+        assertNotNull(savedUser);
+        assertEquals("ivan@example.com", savedUser.getEmail());
+    }
+
+    @Test
+    void getUserById_ShouldReturnUser_WhenExists() {
+        // Given
+        User user = new User();
+        user.setName("Petr");
+        user.setSurname("Petrov");
+        user.setEmail("petr@example.com");
+        user.setBirthDate(LocalDate.of(1985, 7, 20));
+        User savedUser = userRepository.save(user);
+
+        // When
+        UserDto result = userService.getUserById(savedUser.getId());
+
+        // Then
+        assertNotNull(result);
+        assertEquals("petr@example.com", result.getEmail());
+    }
+
+    @Test
+    void updateUser_ShouldUpdateUser_WhenExists() {
+        // Given
+        User user = new User();
+        user.setName("Alex");
+        user.setSurname("Alexeev");
+        user.setEmail("alex@example.com");
+        user.setBirthDate(LocalDate.of(1995, 3, 10));
+        User savedUser = userRepository.save(user);
+
+        UserDto updateDto = new UserDto(savedUser.getId(), "Alexander", "Alexeev",
+                LocalDate.of(1995, 3, 10), "alexander@example.com");
+
+        // When
+        UserDto result = userService.updateUser(savedUser.getId(), updateDto);
+
+        // Then
+        assertEquals("Alexander", result.getName());
+        assertEquals("alexander@example.com", result.getEmail());
+
+        User updatedUser = userRepository.findById(savedUser.getId()).orElse(null);
+        assertNotNull(updatedUser);
+        assertEquals("Alexander", updatedUser.getName());
+        assertEquals("alexander@example.com", updatedUser.getEmail());
+    }
+
+    @Test
+    void deleteUser_ShouldDeleteUser_WhenExists() {
+        // Given
+        User user = new User();
+        user.setName("Sidor");
+        user.setSurname("Sidorov");
+        user.setEmail("sidor@example.com");
+        user.setBirthDate(LocalDate.of(1980, 1, 1));
+        User savedUser = userRepository.save(user);
+
+        // When
+        userService.deleteUser(savedUser.getId());
+
+        // Then
+        assertFalse(userRepository.existsById(savedUser.getId()));
+    }
+
+    @Test
+    void getAllUsers_ShouldReturnPagedUsers_WhenCalled() {
+        // Given
+        int page = 0;
+        int size = 2;
+
+        User user1 = new User();
+        user1.setName("Ivan");
+        user1.setSurname("Ivanov");
+        user1.setEmail("ivan@example.com");
+        user1.setBirthDate(LocalDate.of(1990, 5, 15));
+
+        User user2 = new User();
+        user2.setName("Petr");
+        user2.setSurname("Petrov");
+        user2.setEmail("petr@example.com");
+        user2.setBirthDate(LocalDate.of(1985, 7, 20));
+
+        User user3 = new User();
+        user3.setName("Sidor");
+        user3.setSurname("Sidorov");
+        user3.setEmail("sidor@example.com");
+        user3.setBirthDate(LocalDate.of(1995, 1, 10));
+
+        userRepository.saveAll(List.of(user1, user2, user3));
+
+        // When
+        Page<UserDto> result = userService.getAllUsers(page, size);
+
+        // Then
+        assertEquals(2, result.getContent().size());
+        assertEquals(3, result.getTotalElements());
+        assertEquals(2, result.getTotalPages());
+        assertEquals(0, result.getNumber());
+        assertTrue(result.hasNext());
+
+        var content = result.getContent();
+        assertEquals("ivan@example.com", content.get(0).getEmail());
+        assertEquals("petr@example.com", content.get(1).getEmail());
+    }
+
+    @Test
+    void getAllUsers_ShouldReturnEmptyPage_WhenNoUsersExist() {
+        // Given
+        int page = 0;
+        int size = 10;
+
+        // When
+        Page<UserDto> result = userService.getAllUsers(page, size);
+
+        // Then
+        assertTrue(result.isEmpty());
+        assertEquals(0, result.getTotalElements());
+        assertEquals(0, result.getTotalPages());
+    }
+
+    @Test
+    void getAllUsers_ShouldReturnSecondPage_WhenRequested() {
+        // Given
+        int page = 1;
+        int size = 2;
+
+        User user1 = new User();
+        user1.setName("Ivan");
+        user1.setSurname("Ivanov");
+        user1.setEmail("ivan@example.com");
+        user1.setBirthDate(LocalDate.of(1990, 5, 15));
+
+        User user2 = new User();
+        user2.setName("Petr");
+        user2.setSurname("Petrov");
+        user2.setEmail("petr@example.com");
+        user2.setBirthDate(LocalDate.of(1985, 7, 20));
+
+        User user3 = new User();
+        user3.setName("Sidor");
+        user3.setSurname("Sidorov");
+        user3.setEmail("sidor@example.com");
+        user3.setBirthDate(LocalDate.of(1995, 1, 10));
+
+        userRepository.saveAll(List.of(user1, user2, user3));
+
+        // When
+        Page<UserDto> result = userService.getAllUsers(page, size);
+
+        // Then
+        assertEquals(1, result.getContent().size());
+        assertEquals("sidor@example.com", result.getContent().get(0).getEmail());
+        assertEquals(3, result.getTotalElements());
+        assertEquals(1, result.getNumber());
+        assertFalse(result.hasNext());
+    }
+}
