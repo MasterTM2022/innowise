@@ -1,0 +1,40 @@
+databaseChangeLog:
+- changeSet:
+    id: 1766231937780-1
+    author: perov (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: app_usersPK
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: password
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: role
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: username
+            type: VARCHAR(255)
+        tableName: app_users
+- changeSet:
+    id: 1766231937780-2
+    author: perov (generated)
+    changes:
+    - addUniqueConstraint:
+        columnNames: username
+        constraintName: idx_app_users_username
+        tableName: app_users
+

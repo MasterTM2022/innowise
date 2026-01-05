@@ -1,0 +1,12 @@
+databaseChangeLog:
+- changeSet:
+    id: 1766348663631-5
+    author: perov (generated)
+    changes:
+    - addColumn:
+        columns:
+        - column:
+            name: user_id
+            type: BIGINT
+        tableName: app_users
+
