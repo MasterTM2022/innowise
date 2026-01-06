@@ -3,10 +3,13 @@ package com.innowise.auth.security.service;
 import com.innowise.auth.client.UserServiceClient;
 import com.innowise.auth.dto.*;
 import com.innowise.auth.entity.AppUser;
+import com.innowise.auth.exeption.ServiceUnavailableException;
 import com.innowise.auth.repository.AppUserRepository;
 import com.innowise.auth.security.jwt.JwtUtil;
+import feign.FeignException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cloud.client.circuitbreaker.CircuitBreakerFactory;
+import org.springframework.core.env.Environment;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -67,8 +70,31 @@ public class AuthService {
         );
 
         UserDto userDto = circuitBreakerFactory.create("userService")
-                .run(() -> userServiceClient.createUserProfile(profileRequest),
-                        throwable -> fallbackCreateUserProfile(profileRequest, savedAppUser));
+                .run(() -> {
+                    try {
+                        return userServiceClient.createUserProfile(profileRequest);
+                    } catch (FeignException feignEx) {
+
+                        if (feignEx.status() >= 400 && feignEx.status() < 500) {
+                            throw feignEx;
+                        }
+
+                        throw new RuntimeException("UserService technical error", feignEx);
+                    }
+                }, throwable -> {
+
+                    Throwable cause = throwable;
+                    if (throwable instanceof java.util.concurrent.ExecutionException) {
+                        cause = throwable.getCause();
+                    }
+
+                    if (cause instanceof FeignException feignEx && feignEx.status() >= 400 && feignEx.status() < 500) {
+                        throw feignEx;
+                    }
+
+                    appUserRepository.delete(savedAppUser);
+                    throw new ServiceUnavailableException("User profile service is temporarily unavailable");
+                });
 
         Long userId = userDto.getId();
 
@@ -81,13 +107,10 @@ public class AuthService {
         return new AuthResponse(accessToken, refreshToken);
     }
 
-    private UserDto fallbackCreateUserProfile(CreateUserRequest request, AppUser appUser) {
-        try {
-            appUserRepository.delete(appUser);
-        } catch (Exception e) {
-            log.warn("Failed to delete AppUser after UserService failure", e);
-        }
-        throw new IllegalStateException("User profile service is unavailable. Please try later.");
+    private UserDto fallbackCreateUserProfile(CreateUserRequest request, AppUser appUser, Throwable throwable) {
+        log.error("UserService is down during registration — rolling back auth user", throwable);
+        appUserRepository.delete(appUser);
+        throw new ServiceUnavailableException("User profile service is temporarily unavailable");
     }
 
     public AuthResponse refreshToken(RefreshTokenRequest request) {
