@@ -1,0 +1,42 @@
+server:
+  port: 8082
+  address: 0.0.0.0
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
+spring:
+  application:
+    name: order-service
+  datasource:
+    url: jdbc:postgresql://order-postgres:5432/InnoOrderDB
+    username: postgres
+    password: 070696
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    show-sql: true
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+  web:
+    resources:
+      add-mappings: true
+
+app:
+  jwt:
+    secret: e38e01a12177a40fc49f833864b5423b29a039b127c284f10ac81c07933d4234c2749c01633de0efa45c14fb40cfc60a90b3b8b98108cd38dd3d10d4f666e314
+    access-expiration: ${JWT_ACCESS_EXPIRATION:900000}
+    refresh-expiration: ${JWT_REFRESH_EXPIRATION:86400000}
+
+user:
+  service:
+    url: http://localhost:8081

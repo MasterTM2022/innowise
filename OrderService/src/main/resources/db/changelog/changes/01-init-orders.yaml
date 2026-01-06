@@ -1,0 +1,183 @@
+databaseChangeLog:
+- changeSet:
+    id: 1766750783890-1
+    author: perov (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: itemsPK
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: name
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: price
+            type: numeric(10, 2)
+        tableName: items
+- changeSet:
+    id: 1766750783890-2
+    author: perov (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: order_itemsPK
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: quantity
+            type: INTEGER
+        - column:
+            constraints:
+              nullable: false
+            name: item_id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: order_id
+            type: BIGINT
+        tableName: order_items
+- changeSet:
+    id: 1766750783890-3
+    author: perov (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: ordersPK
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: creation_date
+            type: TIMESTAMP(6) WITHOUT TIME ZONE
+        - column:
+            constraints:
+              nullable: false
+            name: status
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: user_id
+            type: BIGINT
+        tableName: orders
+- changeSet:
+    id: 1766750783890-4
+    author: perov (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: name
+        indexName: idx_items_name
+        tableName: items
+- changeSet:
+    id: 1766750783890-5
+    author: perov (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: price
+        indexName: idx_items_price
+        tableName: items
+- changeSet:
+    id: 1766750783890-6
+    author: perov (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: item_id
+        indexName: idx_order_items_item_id
+        tableName: order_items
+- changeSet:
+    id: 1766750783890-7
+    author: perov (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: order_id
+        indexName: idx_order_items_order_id
+        tableName: order_items
+- changeSet:
+    id: 1766750783890-8
+    author: perov (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: creation_date
+        indexName: idx_orders_creation_date
+        tableName: orders
+- changeSet:
+    id: 1766750783890-9
+    author: perov (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: status
+        indexName: idx_orders_status
+        tableName: orders
+- changeSet:
+    id: 1766750783890-10
+    author: perov (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: user_id
+        indexName: idx_orders_user_id
+        tableName: orders
+- changeSet:
+    id: 1766750783890-11
+    author: perov (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: item_id
+        baseTableName: order_items
+        constraintName: FK88tn2oqcxl1034banqif9r70x
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: items
+        validate: true
+- changeSet:
+    id: 1766750783890-12
+    author: perov (generated)
+    changes:
+    - addForeignKeyConstraint:
+        baseColumnNames: order_id
+        baseTableName: order_items
+        constraintName: FKbioxgbv59vetrxe0ejfubep1w
+        deferrable: false
+        initiallyDeferred: false
+        referencedColumnNames: id
+        referencedTableName: orders
+        validate: true
+

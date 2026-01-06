@@ -1,63 +1,138 @@
 services:
-  app:
-    build: .
+  auth-service:
+    build:
+      context: ./AuthService
+      dockerfile: Dockerfile
+    container_name: auth-service
     ports:
-      - "${APP_PORT}:${APP_PORT}"
+      - "8080:8080"
     environment:
-      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE}
-      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL}
-      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME}
-      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
-      SPRING_DATA_REDIS_HOST: ${SPRING_DATA_REDIS_HOST}
-      SPRING_DATA_REDIS_PORT: ${SPRING_DATA_REDIS_PORT}
-      SPRING_LIQUIBASE_ENABLED: ${SPRING_LIQUIBASE_ENABLED}
-      JWT_SECRET: ${JWT_SECRET}
-      JWT_ACCESS_EXPIRATION: ${JWT_ACCESS_EXPIRATION}
-      JWT_REFRESH_EXPIRATION: ${JWT_REFRESH_EXPIRATION}
+      SPRING_DATASOURCE_URL: jdbc:postgresql://auth-postgres:5432/InnoAuthDB
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 070696
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
     depends_on:
-      postgres:
+      auth-postgres:
         condition: service_healthy
       redis:
-          condition: service_healthy
-    networks:
-      - backend
-
-  postgres:
-    image: postgres:15
-    environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    volumes:
-       - postgres_data:/var/lib/postgresql/data
-#       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-    ports:
-      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+        condition: service_started
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER}" ]
-      interval: 10s
+      test: [ "CMD", "curl", "-f", "http://localhost:8080/actuator/health" ]
+      interval: 30s
       timeout: 10s
-      retries: 5
-      start_period: 30s
-    networks:
-      - backend
+      retries: 3
 
+  auth-postgres:
+     image: postgres:15
+     container_name: auth-postgres
+     environment:
+       POSTGRES_DB: InnoAuthDB
+       POSTGRES_USER: postgres
+       POSTGRES_PASSWORD: 070696
+     volumes:
+       - auth_postgres_data:/var/lib/postgresql/data
+     healthcheck:
+       test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+       interval: 10s
+       timeout: 5s
+       retries: 5
+
+  order-service:
+    build:
+      context: ./OrderService
+      dockerfile: Dockerfile
+    container_name: order-service
+    ports:
+      - "8082:8082"
+    environment:
+      AUTH_SERVICE_URL: http://auth-service:8080
+      USER_SERVICE_URL: http://user-service:8081
+      SPRING_DATASOURCE_URL: jdbc:postgresql://order-postgres:5432/InnoOrderDB
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 070696
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+    depends_on:
+      order-postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      user-service:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  order-postgres:
+    image: postgres:15
+    container_name: order-postgres
+    environment:
+      POSTGRES_DB: InnoOrderDB
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 070696
+    ports:
+      - "5432:5432"
+    volumes:
+      - order_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  user-service:
+    build:
+      context: ./UserService
+      dockerfile: Dockerfile
+    container_name: user-service
+    ports:
+      - "8081:8081"
+    environment:
+      AUTH_SERVICE_URL: http://auth-service:8080
+      SPRING_DATASOURCE_URL: jdbc:postgresql://user-postgres:5432/InnoUserDB
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 070696
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+    depends_on:
+      user-postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8081/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  user-postgres:
+    image: postgres:15
+    container_name: user-postgres
+    environment:
+      POSTGRES_DB: InnoUserDB
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 070696
+    volumes:
+      - user_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   redis:
-     image: redis:7-alpine
-     ports:
-       - "${REDIS_PORT}:${REDIS_PORT}"
-     healthcheck:
-       test: [ "CMD", "redis-cli", "ping" ]
-       interval: 5s
-       timeout: 3s
-       retries: 3
-     networks:
-       - backend
+    image: redis:7-alpine
+    container_name: order-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
 
 volumes:
-  postgres_data:
-
-networks:
-  backend:
-    driver: bridge
+  redis_data:
+  auth_postgres_data:
+  user_postgres_data:
+  order_postgres_data:
