@@ -1,0 +1,7 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/InnoOrderDB
+    username: postgres
+    password: 070696
+
+AUTH_SERVICE_URL: http://localhost:8080
