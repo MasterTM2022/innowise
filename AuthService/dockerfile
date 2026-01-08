@@ -1,0 +1,11 @@
+# AuthService/Dockerfile
+FROM eclipse-temurin:17-jre-alpine
+
+RUN apk add --no-cache tini curl
+
+WORKDIR /app
+
+COPY target/AuthService-*.jar app.jar
+
+ENTRYPOINT ["/sbin/tini", "--"]
+CMD ["java", "-jar", "app.jar"]

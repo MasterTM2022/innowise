@@ -1,0 +1,8 @@
+databaseChangeLog:
+- changeSet:
+    id: add-not-null-constraint-to-card-info-user-id
+    author: perov (generated)
+    changes:
+      - addNotNullConstraint:
+          tableName: card_info
+          columnName: user_id

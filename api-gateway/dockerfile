@@ -1,0 +1,9 @@
+FROM eclipse-temurin:17-jre-alpine
+
+RUN apk add --no-cache tini curl
+
+WORKDIR /app
+
+COPY target/api-gateway-*.jar app.jar
+
+ENTRYPOINT ["/sbin/tini", "--", "java", "-jar", "app.jar"]
