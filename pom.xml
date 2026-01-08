@@ -15,6 +15,7 @@
         <module>AuthService</module>
         <module>OrderService</module>
         <module>api-gateway</module>
+        <module>PaymentService</module>
     </modules>
 
     <parent>

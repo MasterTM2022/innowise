@@ -1,0 +1,82 @@
+databaseChangeLog:
+- changeSet:
+    id: 1767901163215-1
+    author: perov (generated)
+    changes:
+    - createTable:
+        columns:
+        - column:
+            autoIncrement: true
+            constraints:
+              nullable: false
+              primaryKey: true
+              primaryKeyName: paymentsPK
+            name: id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: order_id
+            type: BIGINT
+        - column:
+            constraints:
+              nullable: false
+            name: payment_amount
+            type: numeric(19, 2)
+        - column:
+            constraints:
+              nullable: false
+            name: status
+            type: VARCHAR(255)
+        - column:
+            constraints:
+              nullable: false
+            name: timestamp
+            type: TIMESTAMP(6) WITH TIME ZONE
+        - column:
+            constraints:
+              nullable: false
+            name: user_id
+            type: BIGINT
+        tableName: payments
+- changeSet:
+    id: 1767901163215-2
+    author: perov (generated)
+    changes:
+    - addUniqueConstraint:
+        columnNames: order_id
+        constraintName: uk_payments_order_id
+        tableName: payments
+- changeSet:
+    id: 1767901163215-3
+    author: perov (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: status
+        indexName: idx_payments_status
+        tableName: payments
+- changeSet:
+    id: 1767901163215-4
+    author: perov (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: user_id
+        indexName: idx_payments_user_id
+        tableName: payments
+- changeSet:
+    id: 1767901163215-5
+    author: perov (generated)
+    changes:
+    - createIndex:
+        columns:
+        - column:
+            name: user_id
+        - column:
+            name: status
+        indexName: idx_payments_user_status
+        tableName: payments
+
