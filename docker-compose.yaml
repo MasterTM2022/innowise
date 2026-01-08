@@ -8,6 +8,7 @@ services:
       - "8080:8080"
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      JWT_SECRET: ${JWT_SECRET}
       SPRING_DATASOURCE_URL: jdbc:postgresql://auth-postgres:5432/InnoAuthDB
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: 070696
@@ -48,6 +49,7 @@ services:
       - "8082:8082"
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      JWT_SECRET: ${JWT_SECRET}
       AUTH_SERVICE_URL: http://auth-service:8080
       USER_SERVICE_URL: http://user-service:8081
       SPRING_DATASOURCE_URL: jdbc:postgresql://order-postgres:5432/InnoOrderDB
@@ -94,6 +96,7 @@ services:
       - "8081:8081"
     environment:
       SPRING_PROFILES_ACTIVE: docker
+      JWT_SECRET: ${JWT_SECRET}
       AUTH_SERVICE_URL: http://auth-service:8080
       SPRING_DATASOURCE_URL: jdbc:postgresql://user-postgres:5432/InnoUserDB
       SPRING_DATASOURCE_USERNAME: postgres
@@ -133,8 +136,33 @@ services:
     volumes:
       - redis_data:/data
 
+  api-gateway:
+    build:
+      context: ./api-gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8085:8085"
+    depends_on:
+      auth-service:
+        condition: service_started
+      user-service:
+        condition: service_started
+      order-service:
+        condition: service_started
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      JWT_SECRET: ${JWT_SECRET}
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8085/actuator/health" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
 volumes:
   redis_data:
   auth_postgres_data:
   user_postgres_data:
   order_postgres_data:
+  api-gateway:

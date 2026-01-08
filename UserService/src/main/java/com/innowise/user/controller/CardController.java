@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 
 @RestController
-@RequestMapping("/api/v1/cards/")
+@RequestMapping("/api/v1/users/cards")
 @RequiredArgsConstructor
 @Validated
 public class CardController {
@@ -60,13 +60,13 @@ public class CardController {
 
         JwtClaims jwtClaims = extractClaims(authentication);
 
+        Page<CardDto> cards;
         if ("ADMIN".equals(jwtClaims.role)) {
-            Page<CardDto> cards = cardService.getAllCards(page, size);
-            return ResponseEntity.ok(cards);
+            cards = cardService.getAllCards(page, size);
         } else {
-            Page<CardDto> cards = cardService.getCardsByUserId(jwtClaims.userId, page, size);
-            return ResponseEntity.ok(cards);
+            cards = cardService.getCardsByUserId(jwtClaims.userId, page, size);
         }
+        return ResponseEntity.ok(cards);
     }
 
     @GetMapping("/expired")
@@ -87,7 +87,7 @@ public class CardController {
         }
     }
 
-    @GetMapping("/cards/search")
+    @GetMapping("/search")
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Page<CardDto>> getCardsByLast4Digits(
             @RequestParam(required = false) String fourDigits,

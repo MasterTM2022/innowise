@@ -6,7 +6,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health, info
   endpoint:
     health:
       show-details: always
@@ -43,6 +43,6 @@ user:
 
 app:
   jwt:
-    secret: e38e01a12177a40fc49f833864b5423b29a039b127c284f10ac81c07933d4234c2749c01633de0efa45c14fb40cfc60a90b3b8b98108cd38dd3d10d4f666e314
+    secret: "${JWT_SECRET}"
     access-expiration: ${JWT_ACCESS_EXPIRATION:900000}
     refresh-expiration: ${JWT_REFRESH_EXPIRATION:86400000}
