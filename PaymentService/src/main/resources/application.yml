@@ -1,3 +1,16 @@
+server:
+  port: 8082
+  address: 0.0.0.0
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, info
+  endpoint:
+    health:
+      show-details: always
+
 spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/InnoPaymentDB
@@ -7,11 +20,15 @@ spring:
     hibernate:
       ddl-auto: validate
     show-sql: false
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+  liquibase:
+    enabled: true
+    change-log: classpath:db/changelog/db.changelog-master.yaml
+  web:
+    resources:
+      add-mappings: true
     properties:
       hibernate:
         format_sql: true
         dialect: org.hibernate.dialect.PostgreSQLDialect
 
-  liquibase:
-    change-log: classpath:db/changelog/db.changelog-master.yaml
-    enabled: true

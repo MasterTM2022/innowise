@@ -129,6 +129,50 @@ services:
       timeout: 5s
       retries: 5
 
+  payment-service:
+    build:
+      context: ./PaymentService
+      dockerfile: Dockerfile
+    container_name: payment-service
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      JWT_SECRET: ${JWT_SECRET}
+      AUTH_SERVICE_URL: http://payment-service:8083
+      SPRING_DATASOURCE_URL: jdbc:postgresql://payment-postgres:5432/InnoPaymentDB
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 070696
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+    depends_on:
+      payment-postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:8083/actuator/health" ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  payment-postgres:
+    image: postgres:15
+    container_name: payment-postgres
+    environment:
+      POSTGRES_DB: InnoPaymentDB
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 070696
+    ports:
+      - "5433:5432"
+    volumes:
+      - payment_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   redis:
     image: redis:7-alpine
     ports:
@@ -165,4 +209,4 @@ volumes:
   auth_postgres_data:
   user_postgres_data:
   order_postgres_data:
-  api-gateway:
+  payment_postgres_data:
